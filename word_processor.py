@@ -73,6 +73,8 @@ def word_process(filename):
         #if the line starts with a digit
         elif len(line)>0 and line[0].isdigit():
 
+            #least units/$price format
+
             split_line = line.split("/")
             product["least_unit_for_promo"] = int(split_line[0])
 
@@ -80,9 +82,12 @@ def word_process(filename):
             price = determine_price(split_line[1])
             product["unit_promo_price"] = price
 
-            
-
-
+        #if line contains Discount (%)
+        elif "%" in line:
+            if "OFF" in line:
+                ######
+                ####
+                #####
 
 
     #close file
@@ -100,11 +105,16 @@ def determine_price(str_price):
             str_price = str_price.replace(ch, "")
 
     if len(str_price) >= 3:
-        price = float(str_price)/100
-            
+        try:
+            price = float(str_price)/100
+        except:
+            pass
         
     else:
-        price = float(str_price)
+        try:
+            price = float(str_price)
+        except:
+            pass
 
     return price
 
