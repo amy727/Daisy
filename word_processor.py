@@ -3,7 +3,7 @@
 #Word Processor
 #takes input from file?
 
-def word_process(filename):
+def word_process(text):
     """
     (str) -> dict
     """
@@ -11,6 +11,7 @@ def word_process(filename):
     #Define Dictionary for product
     product = {"product_name":"", "unit_promo_price":"", "uom":"", "least_unit_for_promo":1, "save_per_unit":"", "discount":"", "organic":0}
 
+    #Define list of product names
     with open("product_dictionary.csv", "r") as f:
         product_names = []
         for row in f:
@@ -18,6 +19,7 @@ def word_process(filename):
             product_names.append(row)
     #print(product_names)
 
+    #Define list of units
     with open("units_dictionary.csv", "r") as f:
         units = []
         for row in f:
@@ -26,18 +28,30 @@ def word_process(filename):
     #print(units)
 
     #open file
-    textfile = open(filename, "r")
+    textlines = text.split("\n")
 
     #read line by line
-    for line in textfile:
+    for i in range(len(textlines)):
+        #Define line and nextline
+        line = textlines[i]
+        if i < len(textlines)-2:
+            nextline = textlines[i+1]
 
         #Strip leading and ending whitespace
         line = line.rstrip()
         line = line.lstrip()
+        nextline = nextline.rstrip()
+        nextline = nextline.lstrip()
 
-        #if product name is only on one line
+        #tries to match product name
+        print(line+" "+nextline)
+        if (line+" "+nextline) in product_names:
+            if product["product_name"] == "":
+                product["product_name"] = (line+" "+nextline)
+
         if line in product_names:
-            product["product_name"] = line
+            if product["product_name"] == "":
+                product["product_name"] = line
 
         ## CASE 1
         #if line starts with SAVE
@@ -66,11 +80,14 @@ def word_process(filename):
                 discount = determine_discount(split_line[0])
                 product["discount"] = discount
 
+            ##ie SAVE $3.99 per pound
+            for unit in units:
+                if unit in line: #add unit to uom
+                    product["uom"] = unit
+
     
         #if line starts with $
         elif line.startswith("$"):
-            
-            line = line.lstrip("$")
 
             #find unit
             for unit in units:
@@ -83,11 +100,18 @@ def word_process(filename):
             price = determine_price(split_line[0])
             product["unit_promo_price"] = price
 
+            ##ie $3.99 per pound
+            for unit in units:
+                if unit in line: #add unit to uom
+                    product["uom"] = unit
+
         #if line contains Discount (%) and OFF
         elif "%" in line and "OFF" in line:
             ## Find discount %
             product["discount"] = determine_discount(line)
-        
+
+        elif "HALF" in line and "OFF" in line:
+            product["discount"] = 0.5
         
         #if the line starts with a digit
         elif len(line)>0 and line[0].isdigit():
@@ -104,10 +128,29 @@ def word_process(filename):
                 price = determine_price(split_line[1])
                 product["unit_promo_price"] = price
 
+            ##OR could be (7 oz.)
+            for unit in units:
+                if unit in line: #add unit to uom
+                    product["uom"] = line
 
-    #close file
-    textfile.close()
+        #If product is organic
+        if "organic" in line:
+            product["organic"] = 1
 
+        
+    ##Make sure everything is in UNIT of 1
+    if product["least_unit_for_promo"] > 1:
+        unit_num = product["least_unit_for_promo"]
+        unit_price = product["unit_promo_price"]
+        unit_save = product["save_per_unit"]
+
+        print(unit_num, unit_price, unit_save)
+
+        if product["unit_promo_price"] != "":
+            product["unit_promo_price"] = float(unit_price)/unit_num
+        if product["save_per_unit"] != "":
+            product["save_per_unit"] = float(unit_save)/unit_num     
+        
     return product
 
 def determine_price(str_price):
@@ -169,8 +212,10 @@ def determine_discount(str_discount):
 
 if __name__ == "__main__":
     
+    f = open("test.txt", "r")
+    read = f.read()
+    print(word_process(read))
 
-    print(word_process("test.txt"))
 
 
 
