@@ -85,9 +85,18 @@ def word_process(filename):
         #if line contains Discount (%)
         elif "%" in line:
             if "OFF" in line:
-                ######
-                ####
-                #####
+                ## Find discount %
+                split_line = line.split("%")
+                
+                #Remove non digits
+                for ch in split_line[0]:
+                    if not ch.isdigit():
+                        split_line[0] = split_line[0].replace(ch, "")
+
+                #Calculates discount
+                discount = float(split_line[0])/100
+
+                product["discount"] = discount
 
 
     #close file
