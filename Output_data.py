@@ -1,8 +1,11 @@
+#%%
 import numpy as np
 import cv2
 from PIL import Image
 import pytesseract
-import glob
+from glob import glob
+
+#pytesseract.pytesseract.tesseract_cmd = r'/Users/jorrynlu/anaconda3/lib/python3.7/site-packages/tesseract'
 
 def process_text(image_name):
     '''
@@ -28,6 +31,8 @@ def process_text(image_name):
 
     # the text to be written into the .csv file
     image_name_text = ''
+    i_name = image_name.split('/')
+    flyer_name = i_name[-1][:-4] + ','
 
     for c in cnts:
         area = cv2.contourArea(c)
@@ -43,9 +48,8 @@ def process_text(image_name):
             p_text = ocr_core('ROI.jpg')
 
             # process the text
-            image_name = image_name.split('.')
-            image_name_text += image_name[0] + ','
-            image_name_text += word_process(p_text)
+            if word_process(p_text) != None:
+                image_name_text += flyer_name + word_process(p_text)
 
             ROI_number += 1
     
@@ -63,17 +67,22 @@ def word_process(product_text):
     Output string format: "product_name,unit_promo_price,uom,least_unit_for_promo,save_per_unit,discount,organic\n"
     """
 
-    #Define Dictionary for product
+    # Define Dictionary for product
     product = {"product_name":"", "unit_promo_price":"", "uom":"", "least_unit_for_promo":1, "save_per_unit":"", "discount":"", "organic":0}
 
-    #split text file
+    # split text file
     textlines = product_text.split("\n")
 
-    print(textlines)
+    
     if len(textlines) < 3:
-        return ""
+        return None
+    
+    for line in textlines:
+        if line == '' or line == ' ':
+            textlines.remove(line)
+    print(textlines)
 
-    #Define list of product names
+    # Define list of product names
     with open("product_dictionary.csv", "r") as f:
         product_names = []
         for row in f:
@@ -94,8 +103,11 @@ def word_process(product_text):
     for i in range(len(textlines)):
         #Define line and nextline
         line = textlines[i]
-        if i < len(textlines)-2:
-            nextline = textlines[i+1]
+        if i < len(textlines) - 2:
+            nextline = textlines[i + 1]
+        else:
+            nextline = ''
+            
 
         #Strip leading and ending whitespace
         line = line.rstrip()
@@ -208,15 +220,18 @@ def word_process(product_text):
         if product["unit_promo_price"] != "":
             product["unit_promo_price"] = float(unit_price)/unit_num
         if product["save_per_unit"] != "":
-            product["save_per_unit"] = float(unit_save)/unit_num     
-
+            product["save_per_unit"] = float(unit_save)/unit_num 
+    
+    if product["product_name"] == '':
+        return None
+    
     output = (product["product_name"] + "," \
         + str(product["unit_promo_price"]) + "," \
         + product["uom"] + "," \
         + str(product["least_unit_for_promo"]) + ","\
         + str(product["save_per_unit"]) + "," \
         + str(product["discount"]) + "," \
-        + str(product["organic"]) + "\n")  
+        + str(product["organic"]) + "\n") 
     
     return output
 
@@ -278,7 +293,8 @@ def determine_discount(str_discount):
 
 if __name__ == '__main__':  
     product_text = 'flyer_name,product_name,unit_promo_price,uom,least_unit_for_promo,save_per_unit,discount,organic\n'  
-    for file_name in glob.iglob(r'C:\Users\admin\*.jpg'):
+    files = sorted(glob(r'/Users/jorrynlu/Desktop/flyer_image/*.jpg'))
+    for file_name in files:
         product_text += process_text(file_name)
     
     output_file = open('output.csv', 'w')
