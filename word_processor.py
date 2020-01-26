@@ -5,11 +5,19 @@
 
 def word_process(text):
     """
-    (str) -> dict
+    (str) -> str
+    Output string format: "product_name,unit_promo_price,uom,least_unit_for_promo,save_per_unit,discount,organic\n"
     """
 
     #Define Dictionary for product
     product = {"product_name":"", "unit_promo_price":"", "uom":"", "least_unit_for_promo":1, "save_per_unit":"", "discount":"", "organic":0}
+
+    #split text file
+    textlines = text.split("\n")
+
+    print(textlines)
+    if len(textlines) < 3:
+        return
 
     #Define list of product names
     with open("product_dictionary.csv", "r") as f:
@@ -27,8 +35,6 @@ def word_process(text):
             units.append(row)
     #print(units)
 
-    #open file
-    textlines = text.split("\n")
 
     #read line by line
     for i in range(len(textlines)):
@@ -44,7 +50,7 @@ def word_process(text):
         nextline = nextline.lstrip()
 
         #tries to match product name
-        print(line+" "+nextline)
+        #print(line+" "+nextline)
         if (line+" "+nextline) in product_names:
             if product["product_name"] == "":
                 product["product_name"] = (line+" "+nextline)
@@ -143,15 +149,22 @@ def word_process(text):
         unit_num = product["least_unit_for_promo"]
         unit_price = product["unit_promo_price"]
         unit_save = product["save_per_unit"]
-
-        print(unit_num, unit_price, unit_save)
+        #print(unit_num, unit_price, unit_save)
 
         if product["unit_promo_price"] != "":
             product["unit_promo_price"] = float(unit_price)/unit_num
         if product["save_per_unit"] != "":
             product["save_per_unit"] = float(unit_save)/unit_num     
-        
-    return product
+
+    output = (product["product_name"] + "," \
+        + str(product["unit_promo_price"]) + "," \
+        + product["uom"] + "," \
+        + str(product["least_unit_for_promo"]) + ","\
+        + str(product["save_per_unit"]) + "," \
+        + str(product["discount"]) + "," \
+        + str(product["organic"]) + "\n")  
+    
+    return output
 
 def determine_price(str_price):
     """
@@ -205,7 +218,7 @@ def determine_discount(str_discount):
         discount = float(str_discount)/100
     except:
         pass
-
+    
     return discount
 
 
